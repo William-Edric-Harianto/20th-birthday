@@ -863,7 +863,8 @@
     // ═══════════════════════════════════════
     //  AUDIO SETUP — Fetch-based download for mobile compatibility
     // ═══════════════════════════════════════
-    const audio = new Audio();
+    let audio = null; // created fresh on user tap for mobile compatibility
+    let audioBlobUrl = null; // stored after fetch download
     const playBtn = document.getElementById('playBtn');
     const loadingLabel = document.getElementById('loadingLabel');
     const loadProgressFill = document.getElementById('loadProgressFill');
@@ -880,7 +881,6 @@
         loadingLabel.style.opacity = '0';
         setTimeout(() => { loadingLabel.style.display = 'none'; }, 500);
         playBtn.classList.add('ready');
-        // Update label text
         const playLabel = playBtn.querySelector('.play-label');
         if (playLabel) playLabel.textContent = 'Press to Play';
       }
@@ -904,35 +904,22 @@
           chunks.push(value);
           received += value.length;
 
-          // Update progress bar
           if (total > 0) {
             const pct = Math.min(100, (received / total) * 100);
             loadProgressFill.style.width = pct + '%';
           }
         }
 
-        // Combine chunks into a single blob
+        // Store as blob URL — don't assign to Audio yet (mobile blocks that)
         const blob = new Blob(chunks, { type: 'audio/mpeg' });
-        const blobUrl = URL.createObjectURL(blob);
-
-        // Set the blob URL as audio source — the entire file is now in memory
-        audio.src = blobUrl;
-        audio.load();
-
-        // Wait for the audio to be playable
-        audio.addEventListener('canplaythrough', markAudioReady, { once: true });
-        audio.addEventListener('canplay', markAudioReady, { once: true });
-        // Fallback in case events don't fire
-        setTimeout(markAudioReady, 1000);
+        audioBlobUrl = URL.createObjectURL(blob);
+        markAudioReady();
 
       } catch (err) {
-        console.warn('Audio download failed:', err);
-        // Fallback: try traditional loading
-        audio.src = 'assets/liebestraum_ending.mp3';
-        audio.preload = 'auto';
-        audio.addEventListener('canplaythrough', markAudioReady, { once: true });
-        // Ultimate fallback: let user play without audio
-        setTimeout(markAudioReady, 5000);
+        console.warn('Audio fetch failed, using direct URL fallback:', err);
+        // Fallback: we'll use the direct URL when the user taps
+        audioBlobUrl = 'assets/liebestraum_ending.mp3';
+        markAudioReady();
       }
     }
 
@@ -1693,18 +1680,14 @@
       startSparkles();
       startDustMotes();
 
-      // Start audio safely (handles older mobile browsers/webviews that don't return a Promise)
-      try {
-        if (audio.readyState >= 1) {
-          audio.currentTime = 0;
-        }
-        const playPromise = audio.play();
-        if (playPromise !== undefined && typeof playPromise.catch === 'function') {
-          playPromise.catch(err => console.warn('Audio play blocked:', err));
-        }
-      } catch (err) {
-        console.warn('Audio play threw error:', err);
-      }
+      // Create a FRESH Audio element during user gesture (required by mobile browsers)
+      audio = new Audio(audioBlobUrl);
+      audio.play().catch(err => {
+        console.warn('Blob audio failed, trying direct URL:', err);
+        // Fallback: try playing from direct URL
+        audio = new Audio('assets/liebestraum_ending.mp3');
+        audio.play().catch(e2 => console.warn('Direct audio also failed:', e2));
+      });
 
       // Start lyric timeline
       isPlaying = true;

@@ -1665,62 +1665,38 @@
       }, 1200);
     }
 
-    // ═══════════════════════════════════════
-    //  PLAY BUTTON HANDLER
-    // ═══════════════════════════════════════
-    function startExperience(e) {
-      if (e && e.cancelable) e.preventDefault();
-      if (!audioReady || isPlaying) return;
+    let startHandled = false; // prevent double-fire from touch+click
+    function startExperience() {
+      if (startHandled || !audioReady) return;
+      startHandled = true;
 
+      // === PLAY AUDIO FIRST — must be the very first thing in the gesture ===
+      // This MUST run synchronously inside the click handler before any async code
+      audio.play().then(() => {
+        console.log('Audio playing successfully');
+      }).catch(err => {
+        console.warn('Audio play failed:', err);
+      });
+
+      // Now set up everything else
       playBtn.classList.add('hiding');
       setTimeout(() => { playBtn.style.display = 'none'; }, 800);
 
-      // Show progress bar
       progressWrap.style.opacity = '1';
-
-      // Activate aurora orbs
       auroraOrbs.forEach(orb => orb.classList.add('active'));
 
-      // Start all particle systems
       startSparkles();
       startDustMotes();
 
-      // === AUDIO PLAYBACK: Triple-fallback strategy ===
-      // Strategy 1: Play the DOM <audio> element directly
-      const tryPlay = () => {
-        audio.currentTime = 0;
-        return audio.play();
-      };
-
-      tryPlay().catch(err1 => {
-        console.warn('Strategy 1 (DOM audio) failed:', err1);
-        // Strategy 2: Create fresh Audio with blob URL
-        audio = new Audio(audioBlobUrl);
-        return audio.play();
-      }).catch(err2 => {
-        console.warn('Strategy 2 (blob Audio) failed:', err2);
-        // Strategy 3: Create fresh Audio with direct file URL
-        audio = new Audio('assets/liebestraum_ending.mp3');
-        return audio.play();
-      }).catch(err3 => {
-        console.warn('All audio strategies failed:', err3);
-        // Show visible error so user can report it
-        const errDiv = document.createElement('div');
-        errDiv.style.cssText = 'position:fixed;bottom:10px;left:50%;transform:translateX(-50%);z-index:999;background:rgba(220,50,50,0.9);color:#fff;padding:8px 16px;border-radius:8px;font-size:12px;max-width:90vw;text-align:center;';
-        errDiv.textContent = 'Audio error: ' + err3.message + ' — Try opening in Chrome/Safari instead';
-        document.body.appendChild(errDiv);
-        setTimeout(() => errDiv.remove(), 8000);
-      });
-
-      // Start lyric timeline (runs regardless of audio success)
       isPlaying = true;
       startTime = Date.now();
       updateProgress();
       displayLine(0);
     }
 
+    // Use ONLY 'click' — it fires on both mobile tap and desktop click
+    // and fully preserves user gesture context for audio autoplay policy
     playBtn.addEventListener('click', startExperience);
-    playBtn.addEventListener('touchstart', startExperience, { passive: false });
   </script>
 </body>
 </html>

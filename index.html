@@ -851,13 +851,14 @@
       }
     }, 500);
 
+    // Absolute fallback: Force button to unlock after 3.5 seconds
+    // This prevents an infinite loading deadlock if the browser absolutely refuses to preload media.
+    setTimeout(markAudioReady, 3500);
+
     // Kickstart audio loading on mobile (requires user interaction)
-    document.addEventListener('touchstart', () => {
-      if (!audioReady) audio.load();
-    }, { once: true });
-    document.addEventListener('click', () => {
-      if (!audioReady) audio.load();
-    }, { once: true });
+    const kickstartAudio = () => { if (!audioReady) audio.load(); };
+    document.addEventListener('touchstart', kickstartAudio, { once: true, passive: true });
+    document.addEventListener('click', kickstartAudio, { once: true, passive: true });
 
     // ═══════════════════════════════════════
     //  AMBIENT ELEMENTS
@@ -1589,8 +1590,9 @@
     // ═══════════════════════════════════════
     //  PLAY BUTTON HANDLER
     // ═══════════════════════════════════════
-    playBtn.addEventListener('click', () => {
-      if (!audioReady) return;
+    function startExperience(e) {
+      if (e) e.preventDefault(); // prevent double firing if both touch and click trigger
+      if (!audioReady || isPlaying) return;
 
       playBtn.classList.add('hiding');
       setTimeout(() => { playBtn.style.display = 'none'; }, 800);
@@ -1619,7 +1621,10 @@
       startTime = Date.now();
       updateProgress();
       displayLine(0);
-    });
+    }
+
+    playBtn.addEventListener('click', startExperience);
+    playBtn.addEventListener('touchstart', startExperience, { passive: false });
   </script>
 </body>
 </html>

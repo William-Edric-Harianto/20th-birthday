@@ -760,6 +760,9 @@
   <!-- Vignette -->
   <div id="vignette"></div>
 
+  <!-- Audio element in DOM (mobile browsers trust this more than JS-created Audio) -->
+  <audio id="bgAudio" preload="none"></audio>
+
   <!-- Canvas for floating hearts + stars -->
   <canvas id="heartCanvas"></canvas>
 
@@ -861,10 +864,10 @@
     console.log(`Total duration: ${TOTAL_MS}ms = ${(TOTAL_MS/1000).toFixed(1)}s`);
 
     // ═══════════════════════════════════════
-    //  AUDIO SETUP — Fetch-based download for mobile compatibility
+    //  AUDIO SETUP — Fetch-based download + DOM audio element
     // ═══════════════════════════════════════
-    let audio = null; // created fresh on user tap for mobile compatibility
-    let audioBlobUrl = null; // stored after fetch download
+    let audio = document.getElementById('bgAudio');
+    let audioBlobUrl = null;
     const playBtn = document.getElementById('playBtn');
     const loadingLabel = document.getElementById('loadingLabel');
     const loadProgressFill = document.getElementById('loadProgressFill');
@@ -886,7 +889,7 @@
       }
     }
 
-    // Download the audio file using fetch() — works reliably on mobile
+    // Download audio via fetch for progress tracking
     async function downloadAudio() {
       try {
         const response = await fetch('assets/liebestraum_ending.mp3');
@@ -910,20 +913,22 @@
           }
         }
 
-        // Store as blob URL — don't assign to Audio yet (mobile blocks that)
+        // Create blob URL for later use
         const blob = new Blob(chunks, { type: 'audio/mpeg' });
         audioBlobUrl = URL.createObjectURL(blob);
+        
+        // Pre-set the DOM audio element's source
+        audio.src = audioBlobUrl;
         markAudioReady();
 
       } catch (err) {
-        console.warn('Audio fetch failed, using direct URL fallback:', err);
-        // Fallback: we'll use the direct URL when the user taps
+        console.warn('Fetch download failed:', err);
         audioBlobUrl = 'assets/liebestraum_ending.mp3';
+        audio.src = audioBlobUrl;
         markAudioReady();
       }
     }
 
-    // Start downloading immediately
     downloadAudio();
 
     // ═══════════════════════════════════════
@@ -1680,16 +1685,34 @@
       startSparkles();
       startDustMotes();
 
-      // Create a FRESH Audio element during user gesture (required by mobile browsers)
-      audio = new Audio(audioBlobUrl);
-      audio.play().catch(err => {
-        console.warn('Blob audio failed, trying direct URL:', err);
-        // Fallback: try playing from direct URL
+      // === AUDIO PLAYBACK: Triple-fallback strategy ===
+      // Strategy 1: Play the DOM <audio> element directly
+      const tryPlay = () => {
+        audio.currentTime = 0;
+        return audio.play();
+      };
+
+      tryPlay().catch(err1 => {
+        console.warn('Strategy 1 (DOM audio) failed:', err1);
+        // Strategy 2: Create fresh Audio with blob URL
+        audio = new Audio(audioBlobUrl);
+        return audio.play();
+      }).catch(err2 => {
+        console.warn('Strategy 2 (blob Audio) failed:', err2);
+        // Strategy 3: Create fresh Audio with direct file URL
         audio = new Audio('assets/liebestraum_ending.mp3');
-        audio.play().catch(e2 => console.warn('Direct audio also failed:', e2));
+        return audio.play();
+      }).catch(err3 => {
+        console.warn('All audio strategies failed:', err3);
+        // Show visible error so user can report it
+        const errDiv = document.createElement('div');
+        errDiv.style.cssText = 'position:fixed;bottom:10px;left:50%;transform:translateX(-50%);z-index:999;background:rgba(220,50,50,0.9);color:#fff;padding:8px 16px;border-radius:8px;font-size:12px;max-width:90vw;text-align:center;';
+        errDiv.textContent = 'Audio error: ' + err3.message + ' — Try opening in Chrome/Safari instead';
+        document.body.appendChild(errDiv);
+        setTimeout(() => errDiv.remove(), 8000);
       });
 
-      // Start lyric timeline
+      // Start lyric timeline (runs regardless of audio success)
       isPlaying = true;
       startTime = Date.now();
       updateProgress();

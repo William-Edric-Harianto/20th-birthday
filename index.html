@@ -276,11 +276,13 @@
       flex-direction: column;
       gap: 1.2rem;
       background: radial-gradient(ellipse at center, rgba(20,10,40,0.95), #0d0a1a);
-      cursor: pointer;
-      opacity: 1;
-      pointer-events: auto;
+      opacity: 0;
       transition: opacity 0.5s ease;
       -webkit-tap-highlight-color: transparent;
+    }
+    #playBtn.ready {
+      opacity: 1;
+      cursor: pointer;
     }
     #playBtn.hiding {
       opacity: 0;
@@ -822,8 +824,10 @@
     function markAudioReady() {
       if (!audioReady) {
         audioReady = true;
+        loadingLabel.style.pointerEvents = 'none'; // instantly allow clicks through
         loadingLabel.style.opacity = '0';
         setTimeout(() => { loadingLabel.style.display = 'none'; }, 500);
+        playBtn.classList.add('ready');
       }
     }
 
@@ -1585,7 +1589,7 @@
     // ═══════════════════════════════════════
     function startExperience(e) {
       if (e && e.cancelable) e.preventDefault(); // safely prevent double firing
-      if (isPlaying) return;
+      if (!audioReady || isPlaying) return;
 
       playBtn.classList.add('hiding');
       setTimeout(() => { playBtn.style.display = 'none'; }, 800);
@@ -1606,8 +1610,10 @@
       drawLightRays();
 
       // Start audio safely (handles older mobile browsers/webviews that don't return a Promise)
-      audio.currentTime = 0;
       try {
+        if (audio.readyState >= 1) {
+          audio.currentTime = 0;
+        }
         const playPromise = audio.play();
         if (playPromise !== undefined && typeof playPromise.catch === 'function') {
           playPromise.catch(err => console.warn('Audio play blocked:', err));

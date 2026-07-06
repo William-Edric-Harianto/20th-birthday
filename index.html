@@ -4,21 +4,233 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Happy 20th Birthday ♡</title>
-  <meta name="description" content="A romantic birthday lyric visualizer with beautiful animations">
+  <meta name="description" content="(˶ᵔ ᵕ ᵔ˶) ‹𝟹">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
+    :root {
+      --bg-hue: 260;
+      --bg-sat: 40%;
+      --bg-light: 7%;
+      --glow-opacity: 0;
+      --shake-x: 0px;
+      --shake-y: 0px;
+    }
+
     body {
       font-family: 'Outfit', sans-serif;
-      background: #0d0a1a;
+      background: hsl(var(--bg-hue), var(--bg-sat), var(--bg-light));
       overflow: hidden;
       width: 100vw;
       height: 100dvh;
       position: relative;
+      transition: background 2s ease;
+      transform: translate(var(--shake-x), var(--shake-y));
     }
+
+    /* ── Vignette Overlay ── */
+    #vignette {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      background: radial-gradient(ellipse at center,
+        transparent 40%,
+        rgba(5, 2, 15, 0.45) 75%,
+        rgba(5, 2, 15, 0.85) 100%);
+      opacity: 0.7;
+      transition: opacity 1.5s ease;
+    }
+
+    /* ── Aurora Orbs ── */
+    .aurora-orb {
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+      filter: blur(80px);
+      opacity: 0;
+      transition: opacity 3s ease;
+      mix-blend-mode: screen;
+    }
+    .aurora-orb.active { opacity: 1; }
+    .aurora-orb:nth-child(1) {
+      width: 300px; height: 300px;
+      background: radial-gradient(circle, rgba(249,168,212,0.15), transparent 70%);
+      animation: auroraFloat1 12s ease-in-out infinite;
+    }
+    .aurora-orb:nth-child(2) {
+      width: 250px; height: 250px;
+      background: radial-gradient(circle, rgba(196,181,253,0.12), transparent 70%);
+      animation: auroraFloat2 15s ease-in-out infinite;
+    }
+    .aurora-orb:nth-child(3) {
+      width: 200px; height: 200px;
+      background: radial-gradient(circle, rgba(165,180,252,0.1), transparent 70%);
+      animation: auroraFloat3 18s ease-in-out infinite;
+    }
+    @keyframes auroraFloat1 {
+      0%, 100% { transform: translate(10vw, 20vh) scale(1); }
+      33% { transform: translate(60vw, 60vh) scale(1.3); }
+      66% { transform: translate(30vw, 10vh) scale(0.8); }
+    }
+    @keyframes auroraFloat2 {
+      0%, 100% { transform: translate(70vw, 70vh) scale(1); }
+      33% { transform: translate(20vw, 30vh) scale(1.2); }
+      66% { transform: translate(80vw, 20vh) scale(0.9); }
+    }
+    @keyframes auroraFloat3 {
+      0%, 100% { transform: translate(50vw, 10vh) scale(1.1); }
+      33% { transform: translate(10vw, 80vh) scale(0.7); }
+      66% { transform: translate(60vw, 50vh) scale(1.3); }
+    }
+
+    /* ── Text Glow Aura ── */
+    #glowAura {
+      position: fixed;
+      z-index: 5;
+      pointer-events: none;
+      width: 350px; height: 350px;
+      left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      background: radial-gradient(circle,
+        var(--aura-color1, rgba(249,168,212,0.12)),
+        var(--aura-color2, rgba(196,181,253,0.06)),
+        transparent 70%);
+      filter: blur(40px);
+      opacity: 0;
+      transition: opacity 1s ease, background 2s ease;
+      animation: auraBreathe 4s ease-in-out infinite;
+    }
+    #glowAura.active {
+      opacity: 1;
+    }
+    @keyframes auraBreathe {
+      0%, 100% { transform: translate(-50%, -50%) scale(0.9); opacity: 0.6; }
+      50% { transform: translate(-50%, -50%) scale(1.15); opacity: 1; }
+    }
+
+    /* ── Rotating Light Rays ── */
+    #lightRays {
+      position: fixed;
+      z-index: 4;
+      pointer-events: none;
+      width: 100vw; height: 100vh;
+      left: 0; top: 0;
+      opacity: 0;
+      transition: opacity 2s ease;
+      mix-blend-mode: screen;
+    }
+    #lightRays.active { opacity: 1; }
+    #lightRays canvas {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* ── Heartbeat Pulse Ring ── */
+    .pulse-ring {
+      position: fixed;
+      z-index: 6;
+      pointer-events: none;
+      border-radius: 50%;
+      border: 2px solid rgba(249,168,212,0.3);
+      left: 50%; top: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      animation: pulseRingExpand var(--ring-dur, 2s) ease-out forwards;
+    }
+    @keyframes pulseRingExpand {
+      0% { transform: translate(-50%, -50%) scale(0); opacity: 0.6; }
+      40% { opacity: 0.3; }
+      100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+    }
+
+    /* ── Ghost Trail (previous text afterimage) ── */
+    .ghost-trail {
+      position: fixed;
+      z-index: 8;
+      pointer-events: none;
+      left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: clamp(1.8rem, 11vw, 5rem);
+      color: rgba(249,168,212,0.06);
+      white-space: nowrap;
+      animation: ghostFade 2s ease-out forwards;
+      text-align: center;
+    }
+    @keyframes ghostFade {
+      0% { opacity: 0.12; transform: translate(-50%, -50%) scale(1); filter: blur(0); }
+      100% { opacity: 0; transform: translate(-50%, -55%) scale(1.08); filter: blur(6px); }
+    }
+
+    /* ── Floating Dust Motes ── */
+    .dust-mote {
+      position: fixed;
+      z-index: 3;
+      pointer-events: none;
+      border-radius: 50%;
+      animation: dustDrift var(--dust-dur, 8s) linear forwards;
+    }
+    @keyframes dustDrift {
+      0% { opacity: 0; transform: translateX(0) translateY(0); }
+      15% { opacity: var(--dust-op, 0.3); }
+      85% { opacity: var(--dust-op, 0.3); }
+      100% { opacity: 0; transform: translateX(var(--dust-dx, 100px)) translateY(var(--dust-dy, -30px)); }
+    }
+
+    /* ── Sparkle Particles ── */
+    .sparkle {
+      position: fixed;
+      z-index: 12;
+      pointer-events: none;
+      width: 4px; height: 4px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.8);
+      box-shadow: 0 0 6px rgba(249,168,212,0.6), 0 0 12px rgba(196,181,253,0.3);
+      animation: sparkleFade var(--spark-dur, 1.5s) ease-out forwards;
+    }
+    @keyframes sparkleFade {
+      0% { opacity: 1; transform: translate(0, 0) scale(1); }
+      50% { opacity: 0.8; transform: translate(var(--sx, 10px), var(--sy, -20px)) scale(1.3); }
+      100% { opacity: 0; transform: translate(var(--sx2, 20px), var(--sy2, -40px)) scale(0); }
+    }
+
+    /* ── Screen Shake ── */
+    .screen-shake {
+      animation: shakeIt 0.5s ease-out;
+    }
+    @keyframes shakeIt {
+      0%, 100% { transform: translate(0, 0); }
+      10% { transform: translate(-4px, 2px); }
+      20% { transform: translate(4px, -2px); }
+      30% { transform: translate(-3px, -3px); }
+      40% { transform: translate(3px, 3px); }
+      50% { transform: translate(-2px, 1px); }
+      60% { transform: translate(2px, -1px); }
+      70% { transform: translate(-1px, 2px); }
+      80% { transform: translate(1px, -1px); }
+      90% { transform: translate(-1px, 0px); }
+    }
+
+    /* ── Lens Flare ── */
+    #lensFlare {
+      position: fixed;
+      z-index: 6;
+      pointer-events: none;
+      width: 100vw; height: 100vh;
+      top: 0; left: 0;
+      background: radial-gradient(ellipse at 50% 45%,
+        rgba(249,168,212,0.08) 0%,
+        transparent 50%);
+      opacity: 0;
+      transition: opacity 1.2s ease;
+    }
+    #lensFlare.active { opacity: 1; }
 
     /* ── Canvas ── */
     #heartCanvas {
@@ -196,6 +408,24 @@
       max-width: 92vw;
       word-break: break-word;
       transition: justify-content 0.4s, text-align 0.4s;
+      position: relative;
+    }
+
+    /* ── Blinking cursor after text ── */
+    .lyric-cursor {
+      display: inline-block;
+      width: 3px;
+      height: 1em;
+      background: linear-gradient(to bottom, #f9a8d4, #c4b5fd);
+      margin-left: 4px;
+      border-radius: 2px;
+      vertical-align: text-bottom;
+      animation: cursorBlink 1s step-end infinite;
+      opacity: 0.7;
+    }
+    @keyframes cursorBlink {
+      0%, 100% { opacity: 0.7; }
+      50% { opacity: 0; }
     }
 
     #lyricText.align-left {
@@ -203,12 +433,22 @@
       width: 100%;
       padding-left: 1rem;
       padding-right: 20%;
+      animation: slideFromLeft 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
     }
     #lyricText.align-right {
       text-align: right;
       width: 100%;
       padding-right: 1rem;
       padding-left: 20%;
+      animation: slideFromRight 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+    @keyframes slideFromLeft {
+      0% { transform: translateX(-30px); opacity: 0; }
+      100% { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slideFromRight {
+      0% { transform: translateX(30px); opacity: 0; }
+      100% { transform: translateX(0); opacity: 1; }
     }
 
     @keyframes gradientShift {
@@ -221,26 +461,42 @@
       display: inline-block;
       opacity: 0;
       transform: scale(0);
+      filter: blur(8px);
       /* Claymorphic 3D text shadow on individual chars */
       text-shadow:
         0 1px 0 #fecdd3,
         0 2px 0 #fda4af,
         0 3px 0 #fb7185,
         0 4px 6px rgba(244,114,182,0.25),
-        0 0 20px rgba(249,168,212,0.15);
+        0 0 20px rgba(249,168,212,0.15),
+        0 0 40px rgba(249,168,212,0.08);
       color: transparent;
       background: inherit;
       -webkit-background-clip: text;
       background-clip: text;
+      transition: text-shadow 0.5s ease;
     }
     .char-span.visible {
-      animation: charPopIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      animation: charPopIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+    /* Intensified glow for emotional sections */
+    .char-span.intense-glow {
+      text-shadow:
+        0 1px 0 #fecdd3,
+        0 2px 0 #fda4af,
+        0 3px 0 #fb7185,
+        0 4px 6px rgba(244,114,182,0.35),
+        0 0 25px rgba(249,168,212,0.3),
+        0 0 50px rgba(249,168,212,0.15),
+        0 0 80px rgba(196,181,253,0.1);
     }
 
     @keyframes charPopIn {
-      0% { opacity: 0; transform: scale(0) translateY(10px); }
-      60% { opacity: 1; transform: scale(1.25) translateY(-3px); }
-      100% { opacity: 1; transform: scale(1) translateY(0); }
+      0% { opacity: 0; transform: scale(0) translateY(14px) rotate(-5deg); filter: blur(8px); }
+      40% { opacity: 0.8; transform: scale(1.35) translateY(-5px) rotate(2deg); filter: blur(2px); }
+      65% { opacity: 1; transform: scale(0.92) translateY(2px) rotate(-1deg); filter: blur(0); }
+      80% { transform: scale(1.05) translateY(-1px) rotate(0deg); }
+      100% { opacity: 1; transform: scale(1) translateY(0) rotate(0deg); filter: blur(0); }
     }
 
     /* ── Wave Effect ── */
@@ -248,8 +504,10 @@
       animation: waveFloat 1.8s ease-in-out infinite;
     }
     @keyframes waveFloat {
-      0%, 100% { transform: translateY(0) scale(1); }
-      50% { transform: translateY(-18px) scale(1.05); }
+      0%, 100% { transform: translateY(0) scale(1) rotate(0deg); filter: brightness(1); }
+      25% { filter: brightness(1.2); }
+      50% { transform: translateY(-20px) scale(1.08) rotate(2deg); filter: brightness(1.4); }
+      75% { filter: brightness(1.2); }
     }
 
     /* ── Pulse Effect ── */
@@ -259,11 +517,11 @@
     @keyframes pulseGlow {
       0% {
         transform: scale(1);
-        filter: brightness(1);
+        filter: brightness(1) drop-shadow(0 0 0px rgba(249,168,212,0));
       }
       100% {
-        transform: scale(1.12);
-        filter: brightness(1.35);
+        transform: scale(1.15);
+        filter: brightness(1.4) drop-shadow(0 0 20px rgba(249,168,212,0.4));
       }
     }
 
@@ -302,8 +560,31 @@
       animation: fadeOutScale 0.45s ease-in forwards;
     }
     @keyframes fadeOutScale {
-      0% { opacity: 1; transform: scale(1); }
-      100% { opacity: 0; transform: scale(0.85); }
+      0% { opacity: 1; transform: scale(1); filter: blur(0); }
+      100% { opacity: 0; transform: scale(0.88) translateY(-8px); filter: blur(4px); }
+    }
+
+    /* ── Ambient background pulse on climax ── */
+    .bg-pulse {
+      animation: bgFlash 1.2s ease-out forwards;
+    }
+    @keyframes bgFlash {
+      0% { box-shadow: inset 0 0 200px rgba(249,168,212,0.15); }
+      100% { box-shadow: inset 0 0 0px rgba(249,168,212,0); }
+    }
+
+    /* ── Floating emoji rain ── */
+    .emoji-rain {
+      position: fixed;
+      z-index: 14;
+      pointer-events: none;
+      font-size: 1.2rem;
+      animation: emojiDrift var(--rain-dur, 4s) ease-in forwards;
+    }
+    @keyframes emojiDrift {
+      0% { opacity: 1; transform: translateY(0) rotate(0deg) scale(1); }
+      70% { opacity: 0.5; }
+      100% { opacity: 0; transform: translateY(calc(100vh + 50px)) rotate(360deg) scale(0.5); }
     }
 
     /* ── End Screen ── */
@@ -315,29 +596,66 @@
       align-items: center;
       justify-content: center;
       flex-direction: column;
-      gap: 0.8rem;
+      gap: 1rem;
       background: radial-gradient(ellipse at center, rgba(20,10,40,0.97), #0d0a1a);
       opacity: 0;
       pointer-events: none;
-      transition: opacity 1.2s ease;
+      transition: opacity 1.5s ease;
     }
     #endScreen.visible {
       opacity: 1;
       pointer-events: auto;
     }
     .end-heart {
-      font-size: 3rem;
+      font-size: 3.5rem;
       animation: endFloat 3s ease-in-out infinite;
+      filter: drop-shadow(0 0 15px rgba(249,168,212,0.4));
+      position: relative;
     }
     @keyframes endFloat {
       0%, 100% { transform: translateY(0) scale(1); }
-      50% { transform: translateY(-12px) scale(1.1); }
+      50% { transform: translateY(-15px) scale(1.15); }
+    }
+    /* Orbiting mini hearts around end heart */
+    .orbit-heart {
+      position: absolute;
+      font-size: 0.8rem;
+      animation: orbit var(--orbit-dur, 4s) linear infinite;
+      filter: drop-shadow(0 0 6px rgba(249,168,212,0.3));
+    }
+    @keyframes orbit {
+      0% { transform: rotate(0deg) translateX(var(--orbit-r, 45px)) rotate(0deg); }
+      100% { transform: rotate(360deg) translateX(var(--orbit-r, 45px)) rotate(-360deg); }
     }
     .end-text {
       font-size: 1.1rem;
-      color: rgba(249,168,212,0.5);
-      letter-spacing: 0.15em;
+      color: transparent;
+      background: linear-gradient(135deg, #f9a8d4, #c4b5fd, #a5b4fc);
+      background-size: 200% 200%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      animation: gradientShift 4s ease infinite, endTextGlow 3s ease-in-out infinite alternate;
+      letter-spacing: 0.18em;
       font-weight: 600;
+      text-shadow: 0 0 30px rgba(249,168,212,0.2);
+    }
+    @keyframes endTextGlow {
+      0% { filter: drop-shadow(0 0 5px rgba(249,168,212,0.1)); }
+      100% { filter: drop-shadow(0 0 25px rgba(249,168,212,0.3)); }
+    }
+    .end-sub {
+      font-size: 0.7rem;
+      color: rgba(249,168,212,0.25);
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      font-weight: 500;
+      margin-top: 0.5rem;
+      animation: fadeInSlow 2s ease forwards;
+      opacity: 0;
+      animation-delay: 1.5s;
+    }
+    @keyframes fadeInSlow {
+      to { opacity: 1; }
     }
 
     /* ── Responsive — phone-first ── */
@@ -384,8 +702,25 @@
   </style>
 </head>
 <body>
-  <!-- Canvas for floating hearts -->
+  <!-- Aurora orbs -->
+  <div class="aurora-orb" id="auroraOrb1"></div>
+  <div class="aurora-orb" id="auroraOrb2"></div>
+  <div class="aurora-orb" id="auroraOrb3"></div>
+
+  <!-- Vignette -->
+  <div id="vignette"></div>
+
+  <!-- Canvas for floating hearts + stars -->
   <canvas id="heartCanvas"></canvas>
+
+  <!-- Light rays -->
+  <div id="lightRays"><canvas id="raysCanvas"></canvas></div>
+
+  <!-- Glow aura behind text -->
+  <div id="glowAura"></div>
+
+  <!-- Lens flare -->
+  <div id="lensFlare"></div>
 
   <!-- Progress bar -->
   <div id="progressWrap">
@@ -420,8 +755,14 @@
 
   <!-- End screen -->
   <div id="endScreen">
-    <div class="end-heart">♡</div>
+    <div class="end-heart" id="endHeartWrap">
+      ♡
+      <span class="orbit-heart" style="--orbit-dur:3s;--orbit-r:40px;">♡</span>
+      <span class="orbit-heart" style="--orbit-dur:4.5s;--orbit-r:55px;animation-delay:-1.5s;">✧</span>
+      <span class="orbit-heart" style="--orbit-dur:5.5s;--orbit-r:35px;animation-delay:-3s;">♥</span>
+    </div>
     <div class="end-text">Happy Birthday, Chagi ♡</div>
+    <div class="end-sub">made with love</div>
   </div>
 
   <script>
@@ -483,31 +824,64 @@
     audio.preload = 'auto';
     audio.src = 'liebestraum_ending.mp3';
 
-    audio.addEventListener('canplaythrough', () => {
+    function markAudioReady() {
       if (!audioReady) {
         audioReady = true;
         loadingLabel.style.opacity = '0';
         setTimeout(() => { loadingLabel.style.display = 'none'; }, 500);
         playBtn.classList.add('ready');
       }
-    }, { once: true });
+    }
 
+    audio.addEventListener('canplaythrough', markAudioReady, { once: true });
+    audio.addEventListener('canplay', markAudioReady, { once: true });
+    
     // Fallback if canplaythrough doesn't fire
     audio.addEventListener('loadeddata', () => {
-      if (!audioReady && audio.readyState >= 3) {
-        audioReady = true;
-        loadingLabel.style.opacity = '0';
-        setTimeout(() => { loadingLabel.style.display = 'none'; }, 500);
-        playBtn.classList.add('ready');
+      if (audio.readyState >= 2) {
+        markAudioReady();
       }
     });
 
+    // Polling fallback for strict browsers
+    const readyPoll = setInterval(() => {
+      if (audio.readyState >= 3) {
+        markAudioReady();
+        clearInterval(readyPoll);
+      }
+    }, 500);
+
+    // Kickstart audio loading on mobile (requires user interaction)
+    document.addEventListener('touchstart', () => {
+      if (!audioReady) audio.load();
+    }, { once: true });
+    document.addEventListener('click', () => {
+      if (!audioReady) audio.load();
+    }, { once: true });
+
     // ═══════════════════════════════════════
-    //  HEART PARTICLE CANVAS
+    //  AMBIENT ELEMENTS
+    // ═══════════════════════════════════════
+    const glowAura = document.getElementById('glowAura');
+    const lensFlare = document.getElementById('lensFlare');
+    const vignette = document.getElementById('vignette');
+    const auroraOrbs = document.querySelectorAll('.aurora-orb');
+    const lightRaysDiv = document.getElementById('lightRays');
+    const raysCanvas = document.getElementById('raysCanvas');
+    const raysCtx = raysCanvas.getContext('2d');
+    let shootingStars = [];  // shooting star streaks
+    let dustMoteInterval = null;
+    let raysAngle = 0;
+    let raysActive = false;
+    let prevLineText = '';
+
+    // ═══════════════════════════════════════
+    //  HEART + STAR PARTICLE CANVAS
     // ═══════════════════════════════════════
     const canvas = document.getElementById('heartCanvas');
     const ctx = canvas.getContext('2d');
     let hearts = [];
+    let stars = []; // twinkling star field
     let canvasW, canvasH;
 
     function resizeCanvas() {
@@ -521,20 +895,18 @@
       ctx.beginPath();
       const topY = cy - size * 0.4;
       ctx.moveTo(cx, cy + size * 0.6);
-      // Left curve
       ctx.bezierCurveTo(cx - size, cy, cx - size, topY, cx, topY + size * 0.2);
-      // Right curve
       ctx.bezierCurveTo(cx + size, topY, cx + size, cy, cx, cy + size * 0.6);
       ctx.closePath();
     }
 
     function spawnHeart() {
       const palettes = [
-        'rgba(249,168,212,',  // pink
-        'rgba(196,181,253,',  // lavender
-        'rgba(253,164,175,',  // rose
-        'rgba(165,180,252,',  // periwinkle
-        'rgba(251,191,236,',  // light pink
+        'rgba(249,168,212,',
+        'rgba(196,181,253,',
+        'rgba(253,164,175,',
+        'rgba(165,180,252,',
+        'rgba(251,191,236,',
       ];
       return {
         x: Math.random() * canvasW,
@@ -550,23 +922,153 @@
       };
     }
 
-    // Initial hearts
+    // Twinkling stars
+    function spawnStar() {
+      return {
+        x: Math.random() * canvasW,
+        y: Math.random() * canvasH,
+        size: 0.5 + Math.random() * 2,
+        twinkle: Math.random() * Math.PI * 2,
+        twinkleSpeed: 0.01 + Math.random() * 0.03,
+        maxOpacity: 0.15 + Math.random() * 0.35,
+      };
+    }
+
+    // Initial particles
     for (let i = 0; i < 35; i++) {
       const h = spawnHeart();
       h.y = Math.random() * canvasH;
       hearts.push(h);
     }
+    for (let i = 0; i < 80; i++) {
+      stars.push(spawnStar());
+    }
 
-    let climaxBurstActive = false;
+    let emotionIntensity = 0; // 0-1, affects background warmth
+
+    // ═══════════════════════════════════════
+    //  SHOOTING STARS
+    // ═══════════════════════════════════════
+    function spawnShootingStar() {
+      return {
+        x: Math.random() * canvasW * 0.8,
+        y: Math.random() * canvasH * 0.4,
+        vx: 3 + Math.random() * 4,
+        vy: 1.5 + Math.random() * 2.5,
+        length: 40 + Math.random() * 60,
+        opacity: 0.3 + Math.random() * 0.4,
+        life: 1.0,
+        decay: 0.015 + Math.random() * 0.01,
+      };
+    }
+
+    // ═══════════════════════════════════════
+    //  LIGHT RAYS RENDERER
+    // ═══════════════════════════════════════
+    function resizeRaysCanvas() {
+      raysCanvas.width = window.innerWidth;
+      raysCanvas.height = window.innerHeight;
+    }
+    resizeRaysCanvas();
+    window.addEventListener('resize', resizeRaysCanvas);
+
+    function drawLightRays() {
+      if (!raysActive) return;
+      const w = raysCanvas.width, h = raysCanvas.height;
+      raysCtx.clearRect(0, 0, w, h);
+
+      const cx = w / 2, cy = h / 2;
+      const numRays = 12;
+      raysAngle += 0.002;
+
+      for (let i = 0; i < numRays; i++) {
+        const angle = raysAngle + (Math.PI * 2 * i) / numRays;
+        const len = Math.max(w, h) * 0.9;
+
+        raysCtx.save();
+        raysCtx.translate(cx, cy);
+        raysCtx.rotate(angle);
+
+        const grad = raysCtx.createLinearGradient(0, 0, len, 0);
+        const intensity = 0.02 + emotionIntensity * 0.03;
+        grad.addColorStop(0, `rgba(249, 168, 212, ${intensity})`);
+        grad.addColorStop(0.5, `rgba(196, 181, 253, ${intensity * 0.5})`);
+        grad.addColorStop(1, 'rgba(249, 168, 212, 0)');
+
+        raysCtx.fillStyle = grad;
+        raysCtx.beginPath();
+        raysCtx.moveTo(0, 0);
+        raysCtx.lineTo(len, -12);
+        raysCtx.lineTo(len, 12);
+        raysCtx.closePath();
+        raysCtx.fill();
+        raysCtx.restore();
+      }
+
+      requestAnimationFrame(drawLightRays);
+    }
 
     function animateCanvas() {
       ctx.clearRect(0, 0, canvasW, canvasH);
 
-      // Spawn new hearts occasionally
-      if (Math.random() < 0.06 && hearts.length < 60) {
+      // ── Draw twinkling stars ──
+      for (const s of stars) {
+        s.twinkle += s.twinkleSpeed;
+        const op = s.maxOpacity * (0.3 + 0.7 * Math.abs(Math.sin(s.twinkle)));
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 255, 255, ${op})`;
+        ctx.fill();
+
+        if (s.size > 1.2) {
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, s.size * 3, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(249, 168, 212, ${op * 0.15})`;
+          ctx.fill();
+        }
+      }
+
+      // ── Shooting stars ──
+      if (isPlaying && Math.random() < 0.008 + emotionIntensity * 0.012) {
+        shootingStars.push(spawnShootingStar());
+      }
+      for (let i = shootingStars.length - 1; i >= 0; i--) {
+        const ss = shootingStars[i];
+        ss.x += ss.vx;
+        ss.y += ss.vy;
+        ss.life -= ss.decay;
+        if (ss.life <= 0) { shootingStars.splice(i, 1); continue; }
+
+        ctx.save();
+        ctx.globalAlpha = ss.opacity * ss.life;
+        const angle = Math.atan2(ss.vy, ss.vx);
+        const grad = ctx.createLinearGradient(
+          ss.x, ss.y,
+          ss.x - Math.cos(angle) * ss.length,
+          ss.y - Math.sin(angle) * ss.length
+        );
+        grad.addColorStop(0, 'rgba(255,255,255,0.9)');
+        grad.addColorStop(0.3, 'rgba(249,168,212,0.4)');
+        grad.addColorStop(1, 'rgba(249,168,212,0)');
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(ss.x, ss.y);
+        ctx.lineTo(
+          ss.x - Math.cos(angle) * ss.length * ss.life,
+          ss.y - Math.sin(angle) * ss.length * ss.life
+        );
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // ── Spawn hearts ──
+      const spawnRate = 0.06 + emotionIntensity * 0.08;
+      if (Math.random() < spawnRate && hearts.length < 80) {
         hearts.push(spawnHeart());
       }
 
+      // ── Draw hearts ──
       for (let i = hearts.length - 1; i >= 0; i--) {
         const h = hearts[i];
         h.y -= h.speed;
@@ -574,7 +1076,6 @@
         h.rotation += h.rotSpeed;
         h.pulse += 0.02;
 
-        // Slight size pulsing
         const pSize = h.size + Math.sin(h.pulse) * 1.5;
 
         if (h.y < -30) {
@@ -591,6 +1092,13 @@
         ctx.fillStyle = h.color + h.opacity + ')';
         ctx.fill();
 
+        if (h.opacity > 0.12) {
+          ctx.globalAlpha = h.opacity * 0.3;
+          drawHeart(0, 0, pSize * 1.6);
+          ctx.fillStyle = h.color + (h.opacity * 0.2) + ')';
+          ctx.fill();
+        }
+
         ctx.restore();
       }
 
@@ -599,13 +1107,221 @@
     animateCanvas();
 
     // ═══════════════════════════════════════
-    //  CLIMAX BURST — exploding hearts
+    //  SPARKLE SPAWNER
+    // ═══════════════════════════════════════
+    let sparkleInterval = null;
+
+    function startSparkles() {
+      sparkleInterval = setInterval(() => {
+        const lyricRect = lyricText.getBoundingClientRect();
+        if (lyricRect.width < 10) return;
+
+        // More sparkles when more emotional
+        const count = emotionIntensity > 0.6 ? 2 : 1;
+        for (let n = 0; n < count; n++) {
+          const x = lyricRect.left + Math.random() * lyricRect.width;
+          const y = lyricRect.top + Math.random() * lyricRect.height;
+
+          const spark = document.createElement('div');
+          spark.className = 'sparkle';
+          spark.style.left = x + 'px';
+          spark.style.top = y + 'px';
+          spark.style.setProperty('--sx', (Math.random() - 0.5) * 50 + 'px');
+          spark.style.setProperty('--sy', -(10 + Math.random() * 40) + 'px');
+          spark.style.setProperty('--sx2', (Math.random() - 0.5) * 70 + 'px');
+          spark.style.setProperty('--sy2', -(20 + Math.random() * 60) + 'px');
+          spark.style.setProperty('--spark-dur', (1 + Math.random() * 1.5) + 's');
+          const sz = (2 + Math.random() * 3 + emotionIntensity * 2);
+          spark.style.width = spark.style.height = sz + 'px';
+
+          document.body.appendChild(spark);
+          setTimeout(() => spark.remove(), 2500);
+        }
+      }, Math.max(80, 180 - emotionIntensity * 80));
+    }
+
+    function stopSparkles() {
+      if (sparkleInterval) {
+        clearInterval(sparkleInterval);
+        sparkleInterval = null;
+      }
+    }
+
+    // ═══════════════════════════════════════
+    //  SCREEN SHAKE
+    // ═══════════════════════════════════════
+    function triggerScreenShake() {
+      document.body.classList.add('screen-shake');
+      setTimeout(() => document.body.classList.remove('screen-shake'), 500);
+    }
+
+    // ═══════════════════════════════════════
+    //  EMOJI RAIN (on climax)
+    // ═══════════════════════════════════════
+    function triggerEmojiRain() {
+      const emojis = ['💕', '💖', '✨', '💗', '🌸', '💓', '🦋', '💝'];
+      for (let i = 0; i < 15; i++) {
+        setTimeout(() => {
+          const el = document.createElement('div');
+          el.className = 'emoji-rain';
+          el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+          el.style.left = (5 + Math.random() * 90) + 'vw';
+          el.style.top = -(10 + Math.random() * 30) + 'px';
+          el.style.setProperty('--rain-dur', (3 + Math.random() * 3) + 's');
+          el.style.fontSize = (0.8 + Math.random() * 1) + 'rem';
+          document.body.appendChild(el);
+          setTimeout(() => el.remove(), 6500);
+        }, i * 120);
+      }
+    }
+
+    // ═══════════════════════════════════════
+    //  DUST MOTES
+    // ═══════════════════════════════════════
+    function startDustMotes() {
+      dustMoteInterval = setInterval(() => {
+        const mote = document.createElement('div');
+        mote.className = 'dust-mote';
+        const sz = 1 + Math.random() * 3;
+        mote.style.width = sz + 'px';
+        mote.style.height = sz + 'px';
+        mote.style.left = Math.random() * 100 + 'vw';
+        mote.style.top = (20 + Math.random() * 60) + 'vh';
+        mote.style.background = Math.random() > 0.5
+          ? `rgba(249,168,212,${0.15 + emotionIntensity * 0.15})`
+          : `rgba(196,181,253,${0.12 + emotionIntensity * 0.12})`;
+        const dur = 6 + Math.random() * 6;
+        mote.style.setProperty('--dust-dur', dur + 's');
+        mote.style.setProperty('--dust-dx', (Math.random() - 0.5) * 150 + 'px');
+        mote.style.setProperty('--dust-dy', -(10 + Math.random() * 40) + 'px');
+        mote.style.setProperty('--dust-op', (0.2 + emotionIntensity * 0.2).toString());
+        document.body.appendChild(mote);
+        setTimeout(() => mote.remove(), (dur + 1) * 1000);
+      }, 400);
+    }
+    function stopDustMotes() {
+      if (dustMoteInterval) { clearInterval(dustMoteInterval); dustMoteInterval = null; }
+    }
+
+    // ═══════════════════════════════════════
+    //  GHOST TRAIL (previous text afterimage)
+    // ═══════════════════════════════════════
+    function spawnGhostTrail(text) {
+      if (!text || text.length < 2) return;
+      const ghost = document.createElement('div');
+      ghost.className = 'ghost-trail';
+      ghost.textContent = text;
+      document.body.appendChild(ghost);
+      setTimeout(() => ghost.remove(), 2200);
+    }
+
+    // ═══════════════════════════════════════
+    //  HEARTBEAT PULSE RING
+    // ═══════════════════════════════════════
+    function triggerPulseRing(size) {
+      const ring = document.createElement('div');
+      ring.className = 'pulse-ring';
+      ring.style.width = (size || 200) + 'px';
+      ring.style.height = (size || 200) + 'px';
+      ring.style.setProperty('--ring-dur', (1.5 + Math.random()) + 's');
+      document.body.appendChild(ring);
+      setTimeout(() => ring.remove(), 3000);
+    }
+
+    // ═══════════════════════════════════════
+    //  EMOTION MOOD SYSTEM
+    // ═══════════════════════════════════════
+    function setMoodForLine(index) {
+      const total = lyricTimeline.length;
+      const progress = index / total;
+      const line = lyricTimeline[index];
+
+      let hue = 260;
+      let sat = '40%';
+      let light = '7%';
+      let auraColor1 = 'rgba(249,168,212,0.12)';
+      let auraColor2 = 'rgba(196,181,253,0.06)';
+
+      if (progress < 0.15) {
+        hue = 260;
+        emotionIntensity = 0.2;
+      } else if (progress < 0.4) {
+        hue = 280;
+        emotionIntensity = 0.4;
+        auraColor1 = 'rgba(249,168,212,0.15)';
+        auraColor2 = 'rgba(251,191,236,0.08)';
+      } else if (progress < 0.65) {
+        hue = 300;
+        sat = '45%';
+        emotionIntensity = 0.5;
+        auraColor1 = 'rgba(253,164,175,0.18)';
+        auraColor2 = 'rgba(249,168,212,0.1)';
+      } else if (progress < 0.85) {
+        hue = 320;
+        sat = '50%';
+        light = '8%';
+        emotionIntensity = 0.7;
+        auraColor1 = 'rgba(244,114,182,0.2)';
+        auraColor2 = 'rgba(249,168,212,0.12)';
+      } else {
+        hue = 330;
+        sat = '55%';
+        light = '9%';
+        emotionIntensity = 1.0;
+        auraColor1 = 'rgba(244,114,182,0.25)';
+        auraColor2 = 'rgba(253,164,175,0.15)';
+      }
+
+      if (line.effect === 'climax') {
+        emotionIntensity = 1.0;
+        light = '10%';
+        auraColor1 = 'rgba(244,114,182,0.3)';
+        auraColor2 = 'rgba(249,168,212,0.2)';
+      }
+
+      document.documentElement.style.setProperty('--bg-hue', hue);
+      document.documentElement.style.setProperty('--bg-sat', sat);
+      document.documentElement.style.setProperty('--bg-light', light);
+
+      // Dynamic aura color
+      glowAura.style.setProperty('--aura-color1', auraColor1);
+      glowAura.style.setProperty('--aura-color2', auraColor2);
+
+      // Aura size scales with emotion
+      const auraSize = 300 + emotionIntensity * 150;
+      glowAura.style.width = auraSize + 'px';
+      glowAura.style.height = auraSize + 'px';
+
+      vignette.style.opacity = 0.5 + (1 - emotionIntensity) * 0.3;
+
+      // Pulse rings during emotional moments
+      if (emotionIntensity >= 0.6 && Math.random() > 0.3) {
+        triggerPulseRing(150 + emotionIntensity * 100);
+      }
+    }
+
+    // ═══════════════════════════════════════
+    //  CLIMAX BURST — exploding hearts + screen shake + emoji rain
     // ═══════════════════════════════════════
     function triggerClimaxBurst() {
       const symbols = ['♡', '❤', '💕', '💖', '✨', '💗', '♥', '💓'];
       const cx = window.innerWidth / 2;
       const cy = window.innerHeight / 2;
-      const count = 30 + Math.floor(Math.random() * 15);
+      const count = 35 + Math.floor(Math.random() * 15);
+
+      // Screen shake!
+      triggerScreenShake();
+
+      // Background pulse
+      document.body.classList.add('bg-pulse');
+      setTimeout(() => document.body.classList.remove('bg-pulse'), 1200);
+
+      // Lens flare flash
+      lensFlare.classList.add('active');
+      setTimeout(() => lensFlare.classList.remove('active'), 1500);
+
+      // Emoji rain
+      triggerEmojiRain();
 
       for (let i = 0; i < count; i++) {
         const el = document.createElement('div');
@@ -613,7 +1329,7 @@
         el.textContent = symbols[Math.floor(Math.random() * symbols.length)];
 
         const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.5;
-        const dist = 120 + Math.random() * 280;
+        const dist = 120 + Math.random() * 320;
         const bx = Math.cos(angle) * dist;
         const by = Math.sin(angle) * dist;
         const br = (Math.random() - 0.5) * 720;
@@ -623,20 +1339,21 @@
         el.style.setProperty('--bx', bx + 'px');
         el.style.setProperty('--by', by + 'px');
         el.style.setProperty('--br', br + 'deg');
-        el.style.fontSize = (1 + Math.random() * 1.5) + 'rem';
-        el.style.animationDelay = (Math.random() * 0.15) + 's';
+        el.style.fontSize = (1 + Math.random() * 1.8) + 'rem';
+        el.style.animationDelay = (Math.random() * 0.2) + 's';
 
         document.body.appendChild(el);
-        setTimeout(() => el.remove(), 2200);
+        setTimeout(() => el.remove(), 2500);
       }
 
-      // Also boost canvas hearts
-      for (let i = 0; i < 20; i++) {
+      // Boost canvas hearts
+      for (let i = 0; i < 25; i++) {
         const h = spawnHeart();
         h.y = canvasH / 2;
-        h.x = canvasW / 2 + (Math.random() - 0.5) * 200;
-        h.speed = 1 + Math.random() * 2;
-        h.opacity = 0.2 + Math.random() * 0.2;
+        h.x = canvasW / 2 + (Math.random() - 0.5) * 250;
+        h.speed = 1.5 + Math.random() * 2.5;
+        h.opacity = 0.2 + Math.random() * 0.25;
+        h.size = 10 + Math.random() * 18;
         hearts.push(h);
       }
     }
@@ -666,9 +1383,19 @@
       const line = lyricTimeline[index];
       currentLine = index;
 
+      // Ghost trail of previous text
+      if (prevLineText) {
+        spawnGhostTrail(prevLineText);
+      }
+      prevLineText = line.text;
+
       // Reset classes
       lyricText.className = '';
       clearMorphInterval();
+
+      // Activate ambient effects
+      glowAura.classList.add('active');
+      setMoodForLine(index);
 
       // Handle alignment effects
       if (line.effect === 'side-left') {
@@ -691,7 +1418,6 @@
         span.style.display = 'inline-block';
         span.style.opacity = '1';
         span.classList.add('pop-text');
-        // Apply clay shadow
         span.style.textShadow = `
           0 1px 0 #fecdd3,
           0 2px 0 #fda4af,
@@ -703,6 +1429,9 @@
         span.style.webkitBackgroundClip = 'text';
         span.style.backgroundClip = 'text';
         lyricText.appendChild(span);
+
+        // Screen shake for pop
+        triggerScreenShake();
 
         scheduleNext(index, line.duration);
         return;
@@ -721,6 +1450,9 @@
         const charTime = line.text.length * (60 / line.charSpeed);
         setTimeout(() => {
           lyricText.classList.add('pulse-text');
+          // Also add lens flare for pulse
+          lensFlare.classList.add('active');
+          setTimeout(() => lensFlare.classList.remove('active'), 2000);
         }, charTime + 100);
       }
 
@@ -729,12 +1461,21 @@
 
     function renderCharsPopIn(text, charSpeed, effect) {
       lyricText.innerHTML = '';
-      const baseDelay = 60 / charSpeed; // ms per character
+      const baseDelay = 60 / charSpeed;
+      const totalChars = [...text].length;
+      const isIntense = emotionIntensity >= 0.6;
 
       [...text].forEach((char, i) => {
         const span = document.createElement('span');
         span.className = 'char-span';
+        if (isIntense) span.classList.add('intense-glow');
         span.textContent = char === ' ' ? '\u00A0' : char;
+
+        // Subtle per-character hue offset for rainbow shimmer
+        if (isIntense && totalChars > 3) {
+          const hueShift = (i / totalChars) * 20 - 10; // -10 to +10 degrees
+          span.style.filter = `blur(8px) hue-rotate(${hueShift}deg)`;
+        }
 
         // Wave effect: add staggered animation after pop-in
         if (effect === 'wave') {
@@ -750,8 +1491,22 @@
         // Trigger pop-in with stagger
         setTimeout(() => {
           span.classList.add('visible');
+          // Clear the hue-rotate after pop-in animation handles blur
+          if (isIntense && totalChars > 3) {
+            setTimeout(() => {
+              span.style.filter = `hue-rotate(${((i / totalChars) * 20 - 10)}deg)`;
+            }, 450);
+          }
         }, baseDelay * i);
       });
+
+      // Add blinking cursor after all chars appear
+      const allDone = baseDelay * totalChars + 450;
+      setTimeout(() => {
+        const cursor = document.createElement('span');
+        cursor.className = 'lyric-cursor';
+        lyricText.appendChild(cursor);
+      }, allDone);
     }
 
     function handleMorphEffect(line) {
@@ -808,12 +1563,27 @@
     // ═══════════════════════════════════════
     function finishShow() {
       isPlaying = false;
+      raysActive = false;
       lyricText.innerHTML = '';
       progressBar.style.width = '100%';
+      stopSparkles();
+      stopDustMotes();
+      glowAura.classList.remove('active');
+      lensFlare.classList.remove('active');
+      lightRaysDiv.classList.remove('active');
+
+      // Final climax burst for the ending
+      triggerClimaxBurst();
+
+      // Spawn multiple pulse rings for finale
+      for (let i = 0; i < 3; i++) {
+        setTimeout(() => triggerPulseRing(200 + i * 80), i * 400);
+      }
+
       setTimeout(() => {
         progressWrap.style.opacity = '0';
         endScreen.classList.add('visible');
-      }, 600);
+      }, 1200);
     }
 
     // ═══════════════════════════════════════
@@ -827,6 +1597,18 @@
 
       // Show progress bar
       progressWrap.style.opacity = '1';
+
+      // Activate aurora orbs
+      auroraOrbs.forEach(orb => orb.classList.add('active'));
+
+      // Start all particle systems
+      startSparkles();
+      startDustMotes();
+
+      // Activate light rays
+      raysActive = true;
+      lightRaysDiv.classList.add('active');
+      drawLightRays();
 
       // Start audio
       audio.currentTime = 0;

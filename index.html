@@ -277,9 +277,20 @@
       gap: 1.2rem;
       background: radial-gradient(ellipse at center, rgba(20,10,40,0.95), #0d0a1a);
       opacity: 1;
-      cursor: pointer;
+      cursor: default;
       transition: opacity 0.8s ease;
       -webkit-tap-highlight-color: transparent;
+    }
+    #playBtn.ready {
+      cursor: pointer;
+    }
+    #playBtn.ready .play-ring {
+      border-color: rgba(249,168,212,0.5);
+      animation: readyPulse 2s ease-in-out infinite;
+    }
+    @keyframes readyPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(249,168,212,0); }
+      50% { box-shadow: 0 0 25px 5px rgba(249,168,212,0.2); }
     }
     #playBtn.hiding {
       opacity: 0;
@@ -362,6 +373,26 @@
       left: 50%;
       transform: translateX(-50%);
       z-index: 51;
+      text-align: center;
+      transition: opacity 0.5s ease;
+    }
+    .loading-progress {
+      display: block;
+      margin-top: 0.5rem;
+      width: 120px;
+      height: 3px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .loading-progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #f9a8d4, #c4b5fd);
+      border-radius: 2px;
+      transition: width 0.3s ease;
     }
     .loading-dots::after {
       content: '';
@@ -748,7 +779,8 @@
 
   <!-- Loading indicator -->
   <div id="loadingLabel" class="loading-label">
-    <span>Loading audio</span><span class="loading-dots"></span>
+    <span>Downloading audio<span class="loading-dots"></span></span>
+    <div class="loading-progress"><div class="loading-progress-fill" id="loadProgressFill"></div></div>
   </div>
 
   <!-- Play button overlay -->
@@ -756,7 +788,7 @@
     <div class="play-ring">
       <div class="play-triangle"></div>
     </div>
-    <div class="play-label">Press to Play</div>
+    <div class="play-label">Downloading...</div>
     <div class="volume-hint">
       <svg class="volume-icon" viewBox="0 0 24 24" fill="none" stroke="rgba(249,168,212,0.5)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
         <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
@@ -829,11 +861,12 @@
     console.log(`Total duration: ${TOTAL_MS}ms = ${(TOTAL_MS/1000).toFixed(1)}s`);
 
     // ═══════════════════════════════════════
-    //  AUDIO SETUP
+    //  AUDIO SETUP — Fetch-based download for mobile compatibility
     // ═══════════════════════════════════════
     const audio = new Audio();
     const playBtn = document.getElementById('playBtn');
     const loadingLabel = document.getElementById('loadingLabel');
+    const loadProgressFill = document.getElementById('loadProgressFill');
     const progressWrap = document.getElementById('progressWrap');
     const progressBar = document.getElementById('progressBar');
     const lyricText = document.getElementById('lyricText');
@@ -841,42 +874,70 @@
 
     let audioReady = false;
 
-    audio.preload = 'auto';
-    audio.src = 'assets/liebestraum_ending.mp3';
-
     function markAudioReady() {
       if (!audioReady) {
         audioReady = true;
         loadingLabel.style.opacity = '0';
         setTimeout(() => { loadingLabel.style.display = 'none'; }, 500);
+        playBtn.classList.add('ready');
+        // Update label text
+        const playLabel = playBtn.querySelector('.play-label');
+        if (playLabel) playLabel.textContent = 'Press to Play';
       }
     }
 
-    audio.addEventListener('canplaythrough', markAudioReady, { once: true });
-    audio.addEventListener('canplay', markAudioReady, { once: true });
-    
-    // Fallback if canplaythrough doesn't fire
-    audio.addEventListener('loadeddata', () => {
-      if (audio.readyState >= 2) {
-        markAudioReady();
+    // Download the audio file using fetch() — works reliably on mobile
+    async function downloadAudio() {
+      try {
+        const response = await fetch('assets/liebestraum_ending.mp3');
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+
+        const contentLength = response.headers.get('Content-Length');
+        const total = contentLength ? parseInt(contentLength, 10) : 0;
+        const reader = response.body.getReader();
+        const chunks = [];
+        let received = 0;
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          chunks.push(value);
+          received += value.length;
+
+          // Update progress bar
+          if (total > 0) {
+            const pct = Math.min(100, (received / total) * 100);
+            loadProgressFill.style.width = pct + '%';
+          }
+        }
+
+        // Combine chunks into a single blob
+        const blob = new Blob(chunks, { type: 'audio/mpeg' });
+        const blobUrl = URL.createObjectURL(blob);
+
+        // Set the blob URL as audio source — the entire file is now in memory
+        audio.src = blobUrl;
+        audio.load();
+
+        // Wait for the audio to be playable
+        audio.addEventListener('canplaythrough', markAudioReady, { once: true });
+        audio.addEventListener('canplay', markAudioReady, { once: true });
+        // Fallback in case events don't fire
+        setTimeout(markAudioReady, 1000);
+
+      } catch (err) {
+        console.warn('Audio download failed:', err);
+        // Fallback: try traditional loading
+        audio.src = 'assets/liebestraum_ending.mp3';
+        audio.preload = 'auto';
+        audio.addEventListener('canplaythrough', markAudioReady, { once: true });
+        // Ultimate fallback: let user play without audio
+        setTimeout(markAudioReady, 5000);
       }
-    });
+    }
 
-    // Polling fallback for strict browsers
-    const readyPoll = setInterval(() => {
-      if (audio.readyState >= 3) {
-        markAudioReady();
-        clearInterval(readyPoll);
-      }
-    }, 500);
-
-    // Absolute fallback: Force loading label away after 1.5 seconds
-    setTimeout(markAudioReady, 1500);
-
-    // Kickstart audio loading on mobile (requires user interaction)
-    const kickstartAudio = () => { if (!audioReady) audio.load(); };
-    document.addEventListener('touchstart', kickstartAudio, { once: true, passive: true });
-    document.addEventListener('click', kickstartAudio, { once: true, passive: true });
+    // Start downloading immediately
+    downloadAudio();
 
     // ═══════════════════════════════════════
     //  AMBIENT ELEMENTS
@@ -1616,8 +1677,8 @@
     //  PLAY BUTTON HANDLER
     // ═══════════════════════════════════════
     function startExperience(e) {
-      if (e && e.cancelable) e.preventDefault(); // safely prevent double firing
-      if (isPlaying) return;
+      if (e && e.cancelable) e.preventDefault();
+      if (!audioReady || isPlaying) return;
 
       playBtn.classList.add('hiding');
       setTimeout(() => { playBtn.style.display = 'none'; }, 800);
